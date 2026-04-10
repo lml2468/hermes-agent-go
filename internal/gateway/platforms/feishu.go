@@ -19,16 +19,16 @@ import (
 // It uses the Feishu Open API for sending and event subscription for receiving.
 type FeishuAdapter struct {
 	BasePlatformAdapter
-	appID            string
-	appSecret        string
+	appID             string
+	appSecret         string
 	verificationToken string
-	encryptKey       string
+	encryptKey        string
 	tenantAccessToken string
-	tokenExpiry      time.Time
-	httpClient       *http.Client
-	cancel           context.CancelFunc
-	mu               sync.RWMutex
-	webhookPort      string
+	tokenExpiry       time.Time
+	httpClient        *http.Client
+	cancel            context.CancelFunc
+	mu                sync.RWMutex
+	webhookPort       string
 }
 
 const feishuAPIBase = "https://open.feishu.cn/open-apis"
@@ -141,6 +141,55 @@ func (f *FeishuAdapter) SendVoice(ctx context.Context, chatID string, audioPath 
 // SendDocument sends a document via Feishu.
 func (f *FeishuAdapter) SendDocument(ctx context.Context, chatID string, filePath string, metadata map[string]string) (*gateway.SendResult, error) {
 	return f.Send(ctx, chatID, "[Document] "+filePath, metadata)
+}
+
+// SendCard sends an interactive card message.
+func (f *FeishuAdapter) SendCard(ctx context.Context, chatID string, card FeishuCard, metadata map[string]string) (*gateway.SendResult, error) {
+	token, err := f.getToken()
+	if err != nil {
+		return nil, err
+	}
+
+	payload := map[string]any{
+		"receive_id": chatID,
+		"msg_type":   "interactive",
+		"content":    feishuCardToJSON(card),
+	}
+
+	receiveIDType := "chat_id"
+	if t := metadata["receive_id_type"]; t != "" {
+		receiveIDType = t
+	}
+
+	url := fmt.Sprintf("%s/im/v1/messages?receive_id_type=%s", feishuAPIBase, receiveIDType)
+	return f.feishuPost(ctx, url, token, payload)
+}
+
+// SendPost sends a rich text post message.
+func (f *FeishuAdapter) SendPost(ctx context.Context, chatID string, post FeishuPostContent, metadata map[string]string) (*gateway.SendResult, error) {
+	token, err := f.getToken()
+	if err != nil {
+		return nil, err
+	}
+
+	contentJSON, err := json.Marshal(post)
+	if err != nil {
+		return nil, fmt.Errorf("marshal post content: %w", err)
+	}
+
+	payload := map[string]any{
+		"receive_id": chatID,
+		"msg_type":   "post",
+		"content":    string(contentJSON),
+	}
+
+	receiveIDType := "chat_id"
+	if t := metadata["receive_id_type"]; t != "" {
+		receiveIDType = t
+	}
+
+	url := fmt.Sprintf("%s/im/v1/messages?receive_id_type=%s", feishuAPIBase, receiveIDType)
+	return f.feishuPost(ctx, url, token, payload)
 }
 
 // --- Internal ---
@@ -274,7 +323,8 @@ func (f *FeishuAdapter) feishuPost(ctx context.Context, url, token string, paylo
 
 // feishuEventCallback represents an incoming Feishu event callback.
 type feishuEventCallback struct {
-	Schema string `json:"schema"`
+	Schema  string `json:"schema"`
+	Encrypt string `json:"encrypt,omitempty"` // AES-256-CBC encrypted payload
 	// URL verification challenge.
 	Challenge string `json:"challenge"`
 	Token     string `json:"token"`
@@ -329,10 +379,41 @@ func (f *FeishuAdapter) handleEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var callback feishuEventCallback
-	if err := json.NewDecoder(r.Body).Decode(&callback); err != nil {
+	// Read raw body for signature verification.
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
+	}
+
+	// Verify signature if encrypt key is configured.
+	if f.encryptKey != "" {
+		timestamp := r.Header.Get("X-Lark-Request-Timestamp")
+		nonce := r.Header.Get("X-Lark-Request-Nonce")
+		signature := r.Header.Get("X-Lark-Signature")
+		if !verifyFeishuSignature(timestamp, nonce, f.encryptKey, signature, bodyBytes) {
+			http.Error(w, "invalid signature", http.StatusForbidden)
+			return
+		}
+	}
+
+	var callback feishuEventCallback
+	if err := json.Unmarshal(bodyBytes, &callback); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+
+	// Handle encrypted events.
+	if callback.Encrypt != "" && f.encryptKey != "" {
+		decrypted, decErr := decryptFeishuEvent(callback.Encrypt, f.encryptKey)
+		if decErr != nil {
+			http.Error(w, "decryption failed", http.StatusBadRequest)
+			return
+		}
+		if err := json.Unmarshal(decrypted, &callback); err != nil {
+			http.Error(w, "bad decrypted payload", http.StatusBadRequest)
+			return
+		}
 	}
 
 	// Handle URL verification challenge.
