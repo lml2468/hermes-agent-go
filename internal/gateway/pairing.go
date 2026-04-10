@@ -98,10 +98,6 @@ func (p *PairingStore) IsUserAllowed(platform Platform, userID string) bool {
 	platformUsers, exists := p.allowedUsers[platform]
 	if !exists {
 		// Deny by default when no allowed_users configured for this platform.
-		// To allow open access, set allowed_users: { platform: ["*"] } in config.
-		slog.Warn("No allowed_users configured for platform, denying access. "+
-			"Set allowed_users with \"*\" for open access.",
-			"platform", platform, "user_id", userID)
 		return false
 	}
 
