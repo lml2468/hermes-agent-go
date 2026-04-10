@@ -118,11 +118,8 @@ func handleTerminal(args map[string]any, ctx *ToolContext) string {
 		}
 	}
 
-	// Sudo handling: detect sudo commands and warn
+	// Sudo handling: detect sudo commands and warn.
 	if isSudoCommand(command) {
-		if ctx != nil && ctx.Platform == "cli" {
-			slog.Warn("Sudo command detected", "command", command)
-		}
 		return toJSON(map[string]any{
 			"error":   "sudo_required",
 			"command": command,
@@ -133,7 +130,6 @@ func handleTerminal(args map[string]any, ctx *ToolContext) string {
 
 	// Dangerous command check: detect destructive or dangerous commands.
 	if isDangerous, reason := IsDangerousCommand(command); isDangerous {
-		slog.Warn("Dangerous command blocked", "command", command, "reason", reason)
 		return toJSON(map[string]any{
 			"error":   "dangerous_command",
 			"command": command,

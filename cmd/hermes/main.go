@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/hermes-agent/hermes-agent-go/internal/acp"
 	"github.com/hermes-agent/hermes-agent-go/internal/agent"
 	"github.com/hermes-agent/hermes-agent-go/internal/batch"
@@ -21,7 +23,6 @@ import (
 	"github.com/hermes-agent/hermes-agent-go/internal/gateway"
 	"github.com/hermes-agent/hermes-agent-go/internal/gateway/platforms"
 	"github.com/hermes-agent/hermes-agent-go/internal/skills"
-	"github.com/spf13/cobra"
 )
 
 // Build-time variables set via ldflags.
