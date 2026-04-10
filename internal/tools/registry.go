@@ -14,11 +14,12 @@ type ToolHandler func(args map[string]any, ctx *ToolContext) string
 
 // ToolContext provides context to tool handlers.
 type ToolContext struct {
-	TaskID     string
-	SessionID  string
-	ToolCallID string
-	Platform   string
-	Extra      map[string]any // Additional context (e.g., delegation depth)
+	TaskID          string
+	SessionID       string
+	ToolCallID      string
+	Platform        string
+	Extra           map[string]any  // Additional context (e.g., delegation depth)
+	ApprovalHandler ApprovalHandler // Optional handler for interactive command approval
 }
 
 // ToolEntry holds metadata for a registered tool.

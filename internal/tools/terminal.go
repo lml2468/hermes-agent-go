@@ -131,14 +131,17 @@ func handleTerminal(args map[string]any, ctx *ToolContext) string {
 		})
 	}
 
-	// Dangerous command check: detect destructive or dangerous commands.
-	if isDangerous, reason := IsDangerousCommand(command); isDangerous {
-		slog.Warn("Dangerous command blocked", "command", command, "reason", reason)
+	// Dangerous command check: detect and request approval.
+	approvalResult := CheckDangerousCommand(command, ctx)
+	if approved, ok := approvalResult["approved"].(bool); ok && !approved {
+		msg, _ := approvalResult["message"].(string)
+		if msg == "" {
+			msg = "command was blocked as potentially dangerous"
+		}
 		return toJSON(map[string]any{
 			"error":   "dangerous_command",
 			"command": command,
-			"reason":  reason,
-			"message": "This command has been flagged as potentially dangerous and was blocked. Please review and confirm if you really want to execute this.",
+			"message": msg,
 		})
 	}
 

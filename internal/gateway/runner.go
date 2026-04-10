@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/hermes-agent/hermes-agent-go/internal/agent"
 	"github.com/hermes-agent/hermes-agent-go/internal/config"
+	"github.com/hermes-agent/hermes-agent-go/internal/tools"
 )
 
 // Runner manages multiple platform adapters and routes messages to the agent.
@@ -321,6 +323,47 @@ func (r *Runner) handleGatewayCommand(event *MessageEvent, session *SessionEntry
 
 	case "stop":
 		adapter.Send(r.ctx, event.Source.ChatID, "Background processes stopped.", nil)
+
+	case "approve", "yes":
+		result := tools.ApprovalResult{Approved: true, Scope: tools.ApproveOnce}
+		switch strings.ToLower(strings.TrimSpace(args)) {
+		case "session":
+			result.Scope = tools.ApproveSession
+		case "always", "permanent":
+			result.Scope = tools.ApprovePermanent
+		case "all":
+			count := tools.GlobalGatewayApprovalQueue().ResolveAll(
+				session.SessionKey, tools.ApprovalResult{Approved: true, Scope: tools.ApproveSession})
+			if count == 0 {
+				adapter.Send(r.ctx, event.Source.ChatID, "No pending approvals.", nil)
+			} else {
+				adapter.Send(r.ctx, event.Source.ChatID,
+					fmt.Sprintf("✅ Approved %d pending command(s) for this session.", count), nil)
+			}
+			return
+		}
+		count := tools.GlobalGatewayApprovalQueue().Resolve(session.SessionKey, result)
+		if count == 0 {
+			adapter.Send(r.ctx, event.Source.ChatID, "No pending approvals.", nil)
+		} else {
+			scopeLabel := "this command"
+			if result.Scope == tools.ApproveSession {
+				scopeLabel = "this session"
+			} else if result.Scope == tools.ApprovePermanent {
+				scopeLabel = "permanently"
+			}
+			adapter.Send(r.ctx, event.Source.ChatID,
+				fmt.Sprintf("✅ Approved for %s.", scopeLabel), nil)
+		}
+
+	case "deny", "no":
+		count := tools.GlobalGatewayApprovalQueue().Resolve(
+			session.SessionKey, tools.ApprovalResult{Approved: false, Scope: tools.ApproveDeny})
+		if count == 0 {
+			adapter.Send(r.ctx, event.Source.ChatID, "No pending approvals.", nil)
+		} else {
+			adapter.Send(r.ctx, event.Source.ChatID, "❌ Command denied.", nil)
+		}
 
 	default:
 		adapter.Send(r.ctx, event.Source.ChatID, fmt.Sprintf("Command /%s acknowledged.", command), nil)
@@ -660,7 +703,7 @@ func GetGatewayKnownCommands() map[string]bool {
 	// we duplicate the minimal set needed here to avoid a circular import.
 	return map[string]bool{
 		"new": true, "reset": true, "help": true, "status": true,
-		"stop": true, "approve": true, "deny": true, "model": true,
+		"stop": true, "approve": true, "deny": true, "yes": true, "no": true, "model": true,
 		"retry": true, "undo": true, "compress": true, "usage": true,
 		"background": true, "bg": true, "personality": true,
 		"voice": true, "yolo": true, "verbose": true, "reasoning": true,
@@ -685,8 +728,8 @@ func GatewayHelpLines() []string {
 		"`/usage` -- Show token usage",
 		"`/stop` -- Stop background processes",
 		"`/background <prompt>` -- Run a prompt in the background",
-		"`/approve` -- Approve a pending dangerous command",
-		"`/deny` -- Deny a pending dangerous command",
+		"`/approve` -- Approve a pending dangerous command (alias: /yes)",
+		"`/deny` -- Deny a pending dangerous command (alias: /no)",
 		"`/pair <code>` -- Pair with a pairing code",
 	}
 }
