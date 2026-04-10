@@ -44,13 +44,13 @@ func main() {
 
 // --- Persistent flags ---
 var (
-	flagProfile string
-	flagModel   string
-	flagQuiet   bool
-	flagDebug   bool
-	flagBaseURL string
-	flagAPIKey  string
-	flagAPIMode string
+	flagProfile  string
+	flagModel    string
+	flagQuiet    bool
+	flagDebug    bool
+	flagBaseURL  string
+	flagAPIKey   string
+	flagAPIMode  string
 	flagProvider string
 )
 
@@ -412,16 +412,22 @@ func runGateway() error {
 	}
 
 	// Start ACP server if configured.
+	var acpDone chan struct{}
 	if acpPortStr := os.Getenv("HERMES_ACP_PORT"); acpPortStr != "" {
 		acpPort, err := strconv.Atoi(acpPortStr)
 		if err == nil && acpPort > 0 {
 			acpServer := acp.NewACPServer(acpPort)
+			acpDone = make(chan struct{})
 			go func() {
+				defer close(acpDone)
 				if err := acpServer.Start(); err != nil {
-					slog.Warn("ACP server failed", "error", err)
+					slog.Warn("acp server failed", "error", err)
 				}
 			}()
-			defer acpServer.Stop()
+			defer func() {
+				acpServer.Stop()
+				<-acpDone
+			}()
 			slog.Info("ACP server started", "port", acpPort)
 		}
 	}

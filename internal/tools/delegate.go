@@ -303,7 +303,7 @@ func runSubAgentWithOptions(goal, model, provider, apiKey, baseURL string, cfg *
 
 		resp, err := client.CreateChatCompletion(ctx, req)
 		if err != nil {
-			return "", fmt.Errorf("API call (iteration %d): %w", i, err)
+			return "", fmt.Errorf("api call (iteration %d): %w", i, err)
 		}
 
 		// If no tool calls, return the text response

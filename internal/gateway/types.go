@@ -23,22 +23,22 @@ const (
 type Platform string
 
 const (
-	PlatformLocal        Platform = "local"
-	PlatformTelegram     Platform = "telegram"
-	PlatformDiscord      Platform = "discord"
-	PlatformSlack        Platform = "slack"
-	PlatformWhatsApp     Platform = "whatsapp"
-	PlatformSignal       Platform = "signal"
-	PlatformMatrix       Platform = "matrix"
-	PlatformMattermost   Platform = "mattermost"
+	PlatformLocal         Platform = "local"
+	PlatformTelegram      Platform = "telegram"
+	PlatformDiscord       Platform = "discord"
+	PlatformSlack         Platform = "slack"
+	PlatformWhatsApp      Platform = "whatsapp"
+	PlatformSignal        Platform = "signal"
+	PlatformMatrix        Platform = "matrix"
+	PlatformMattermost    Platform = "mattermost"
 	PlatformHomeAssistant Platform = "homeassistant"
-	PlatformDingTalk     Platform = "dingtalk"
-	PlatformFeishu       Platform = "feishu"
-	PlatformWeCom        Platform = "wecom"
-	PlatformEmail        Platform = "email"
-	PlatformSMS          Platform = "sms"
-	PlatformWebhook      Platform = "webhook"
-	PlatformAPIServer    Platform = "apiserver"
+	PlatformDingTalk      Platform = "dingtalk"
+	PlatformFeishu        Platform = "feishu"
+	PlatformWeCom         Platform = "wecom"
+	PlatformEmail         Platform = "email"
+	PlatformSMS           Platform = "sms"
+	PlatformWebhook       Platform = "webhook"
+	PlatformAPIServer     Platform = "apiserver"
 )
 
 // MessageEvent represents an incoming message from any platform.
@@ -177,8 +177,8 @@ type PlatformConfig struct {
 // GatewayConfig holds the full gateway configuration.
 type GatewayConfig struct {
 	Platforms    map[Platform]*PlatformConfig `yaml:"platforms"`
-	Settings     GatewaySettings             `yaml:"settings"`
-	AllowedUsers map[string]any              `yaml:"allowed_users"`
+	Settings     GatewaySettings              `yaml:"settings"`
+	AllowedUsers map[string]any               `yaml:"allowed_users"`
 }
 
 // GatewaySettings holds gateway-level settings.
