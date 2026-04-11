@@ -1,12 +1,10 @@
 package llm
 
-import "strings"
-
 // ModelMeta holds metadata for a known model.
 type ModelMeta struct {
-	ContextLength int
-	MaxOutput     int
-	SupportsTools bool
+	ContextLength  int
+	MaxOutput      int
+	SupportsTools  bool
 	SupportsVision bool
 }
 
@@ -24,29 +22,6 @@ var KnownModels = map[string]ModelMeta{
 	"deepseek/deepseek-chat":             {ContextLength: 65536, MaxOutput: 8192, SupportsTools: true, SupportsVision: false},
 	"deepseek/deepseek-r1":               {ContextLength: 65536, MaxOutput: 8192, SupportsTools: true, SupportsVision: false},
 	"meta-llama/llama-4-maverick":        {ContextLength: 1048576, MaxOutput: 32768, SupportsTools: true, SupportsVision: true},
-}
-
-// GetModelMeta returns metadata for a model, with fallback defaults.
-func GetModelMeta(model string) ModelMeta {
-	if meta, ok := KnownModels[model]; ok {
-		return meta
-	}
-
-	// Try partial match
-	lower := strings.ToLower(model)
-	for key, meta := range KnownModels {
-		if strings.Contains(lower, strings.ToLower(key)) {
-			return meta
-		}
-	}
-
-	// Default for unknown models
-	return ModelMeta{
-		ContextLength:  128000,
-		MaxOutput:      8192,
-		SupportsTools:  true,
-		SupportsVision: false,
-	}
 }
 
 // EstimateTokens gives a rough token count for a string.
