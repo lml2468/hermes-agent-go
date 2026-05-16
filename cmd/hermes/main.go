@@ -19,7 +19,6 @@ import (
 	"github.com/hermes-agent/hermes-agent-go/internal/config"
 	"github.com/hermes-agent/hermes-agent-go/internal/cron"
 	"github.com/hermes-agent/hermes-agent-go/internal/gateway"
-	"github.com/hermes-agent/hermes-agent-go/internal/gateway/platforms"
 	"github.com/hermes-agent/hermes-agent-go/internal/skills"
 	"github.com/spf13/cobra"
 
@@ -387,22 +386,12 @@ func runGateway() error {
 
 	runner := gateway.NewRunner(gwCfg)
 
-	// Register DMWork adapter.
-	if botToken := os.Getenv("DMWORK_BOT_TOKEN"); botToken != "" {
-		apiURL := os.Getenv("DMWORK_API_URL")
-		if apiURL == "" {
-			apiURL = "https://api.botgate.dmwork.cn"
-		}
-		adapter := platforms.NewDMWorkAdapter(apiURL, botToken)
-		runner.RegisterAdapter(adapter)
-	}
-
 	// Load platform plugins (e.g. Octo).
 	gateway.LoadPlatformPlugins(runner, gwCfg)
 
 	if len(runner.ConnectedPlatforms()) == 0 {
 		fmt.Println("No messaging platforms configured.")
-		fmt.Println("Set DMWORK_BOT_TOKEN and DMWORK_API_URL in ~/.hermes/.env")
+		fmt.Println("Set OCTO_BOT_TOKEN and OCTO_API_URL in ~/.hermes/.env")
 		return fmt.Errorf("no platforms configured")
 	}
 

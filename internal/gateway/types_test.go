@@ -36,7 +36,7 @@ func TestMessageEventCommand(t *testing.T) {
 
 func TestSessionSource(t *testing.T) {
 	src := &SessionSource{
-		Platform: PlatformDMWork,
+		Platform: PlatformOcto,
 		ChatID:   "12345",
 		UserID:   "user1",
 	}
@@ -54,7 +54,7 @@ func TestSessionSource(t *testing.T) {
 
 	// Different chat should produce different key
 	src2 := &SessionSource{
-		Platform: PlatformDMWork,
+		Platform: PlatformOcto,
 		ChatID:   "99999",
 		UserID:   "user1",
 	}
@@ -95,13 +95,13 @@ func TestMessageType(t *testing.T) {
 }
 
 func TestPlatformConstants(t *testing.T) {
-	if PlatformDMWork != "dmwork" {
-		t.Errorf("Expected 'telegram', got '%s'", PlatformDMWork)
+	if PlatformOcto != "octo" {
+		t.Errorf("Expected 'telegram', got '%s'", PlatformOcto)
 	}
-	if PlatformDMWork != "dmwork" {
-		t.Errorf("Expected 'discord', got '%s'", PlatformDMWork)
+	if PlatformOcto != "octo" {
+		t.Errorf("Expected 'discord', got '%s'", PlatformOcto)
 	}
-	if PlatformDMWork != "dmwork" {
-		t.Errorf("Expected 'slack', got '%s'", PlatformDMWork)
+	if PlatformOcto != "octo" {
+		t.Errorf("Expected 'slack', got '%s'", PlatformOcto)
 	}
 }

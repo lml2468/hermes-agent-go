@@ -23,9 +23,8 @@ const (
 type Platform string
 
 const (
-	PlatformLocal  Platform = "local"
-	PlatformDMWork Platform = "dmwork"
-	PlatformOcto   Platform = "octo"
+	PlatformLocal Platform = "local"
+	PlatformOcto  Platform = "octo"
 )
 
 // MessageEvent represents an incoming message from any platform.

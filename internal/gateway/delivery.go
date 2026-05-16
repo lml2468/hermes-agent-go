@@ -12,7 +12,7 @@ import (
 
 // PlatformMaxMessageLength defines per-platform message length limits.
 var PlatformMaxMessageLength = map[Platform]int{
-	PlatformDMWork: 4096,
+	PlatformOcto: 4096,
 }
 
 // DeliveryRouter routes responses to the correct platform adapter with

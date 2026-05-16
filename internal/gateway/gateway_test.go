@@ -15,19 +15,19 @@ func TestDeliveryRouter_MaxMessageLength(t *testing.T) {
 	dr := NewDeliveryRouter()
 
 	// Known platform
-	if dr.maxMessageLength(PlatformDMWork) != 4096 {
-		t.Errorf("Expected 4096 for dmwork, got %d", dr.maxMessageLength(PlatformDMWork))
+	if dr.maxMessageLength(PlatformOcto) != 4096 {
+		t.Errorf("Expected 4096 for octo, got %d", dr.maxMessageLength(PlatformOcto))
 	}
-	if dr.maxMessageLength(PlatformDMWork) != 4096 {
-		t.Errorf("Expected 4096 for dmwork, got %d", dr.maxMessageLength(PlatformDMWork))
+	if dr.maxMessageLength(PlatformOcto) != 4096 {
+		t.Errorf("Expected 4096 for octo, got %d", dr.maxMessageLength(PlatformOcto))
 	}
-	if dr.maxMessageLength(PlatformDMWork) != 4096 {
-		t.Errorf("Expected 4096 for dmwork, got %d", dr.maxMessageLength(PlatformDMWork))
+	if dr.maxMessageLength(PlatformOcto) != 4096 {
+		t.Errorf("Expected 4096 for octo, got %d", dr.maxMessageLength(PlatformOcto))
 	}
 
 	// Unlimited platform defaults to 4096
-	if dr.maxMessageLength(PlatformDMWork) != 4096 {
-		t.Errorf("Expected 4096 for dmwork (default), got %d", dr.maxMessageLength(PlatformDMWork))
+	if dr.maxMessageLength(PlatformOcto) != 4096 {
+		t.Errorf("Expected 4096 for octo (default), got %d", dr.maxMessageLength(PlatformOcto))
 	}
 
 	// Unknown platform defaults to 4096
@@ -38,10 +38,10 @@ func TestDeliveryRouter_MaxMessageLength(t *testing.T) {
 
 func TestDeliveryRouter_RegisterAndGetAdapter(t *testing.T) {
 	dr := NewDeliveryRouter()
-	adapter := &mockAdapter{platform: PlatformDMWork}
+	adapter := &mockAdapter{platform: PlatformOcto}
 
 	dr.RegisterAdapter(adapter)
-	got := dr.GetAdapter(PlatformDMWork)
+	got := dr.GetAdapter(PlatformOcto)
 	if got == nil {
 		t.Error("Expected adapter to be registered")
 	}
@@ -54,7 +54,7 @@ func TestDeliveryRouter_RegisterAndGetAdapter(t *testing.T) {
 
 func TestDeliveryRouter_DeliverResponse_NoAdapter(t *testing.T) {
 	dr := NewDeliveryRouter()
-	err := dr.DeliverResponse(context.Background(), "chat1", "Hello", SessionSource{Platform: PlatformDMWork})
+	err := dr.DeliverResponse(context.Background(), "chat1", "Hello", SessionSource{Platform: PlatformOcto})
 	if err == nil {
 		t.Error("Expected error when no adapter registered")
 	}
@@ -257,7 +257,7 @@ func TestHookRegistry_EventType(t *testing.T) {
 func TestPairingStore_IsUserAllowed_NoRestrictions(t *testing.T) {
 	ps := NewPairingStore()
 	// No restrictions = deny by default (secure)
-	if ps.IsUserAllowed(PlatformDMWork, "anyuser") {
+	if ps.IsUserAllowed(PlatformOcto, "anyuser") {
 		t.Error("Expected deny-by-default when no restrictions configured")
 	}
 }
@@ -265,9 +265,9 @@ func TestPairingStore_IsUserAllowed_NoRestrictions(t *testing.T) {
 func TestPairingStore_IsUserAllowed_Wildcard(t *testing.T) {
 	ps := NewPairingStore()
 	ps.LoadAllowedUsers(map[string]any{
-		"dmwork": []any{"*"},
+		"octo": []any{"*"},
 	})
-	if !ps.IsUserAllowed(PlatformDMWork, "anyuser") {
+	if !ps.IsUserAllowed(PlatformOcto, "anyuser") {
 		t.Error("Expected wildcard to allow any user")
 	}
 }
@@ -275,29 +275,29 @@ func TestPairingStore_IsUserAllowed_Wildcard(t *testing.T) {
 func TestPairingStore_IsUserAllowed_ExactMatch(t *testing.T) {
 	ps := NewPairingStore()
 	ps.LoadAllowedUsers(map[string]any{
-		"dmwork": []any{"user123", "user456"},
+		"octo": []any{"user123", "user456"},
 	})
 
-	if !ps.IsUserAllowed(PlatformDMWork, "user123") {
+	if !ps.IsUserAllowed(PlatformOcto, "user123") {
 		t.Error("Expected allowed user to pass")
 	}
-	if ps.IsUserAllowed(PlatformDMWork, "user999") {
+	if ps.IsUserAllowed(PlatformOcto, "user999") {
 		t.Error("Expected disallowed user to fail")
 	}
 }
 
 func TestPairingStore_AddAndRemoveUser(t *testing.T) {
 	ps := NewPairingStore()
-	ps.AddAllowedUser(PlatformDMWork, "user1")
+	ps.AddAllowedUser(PlatformOcto, "user1")
 
-	if !ps.IsUserAllowed(PlatformDMWork, "user1") {
+	if !ps.IsUserAllowed(PlatformOcto, "user1") {
 		t.Error("Expected added user to be allowed")
 	}
 
-	ps.RemoveAllowedUser(PlatformDMWork, "user1")
+	ps.RemoveAllowedUser(PlatformOcto, "user1")
 	// After removal, if no users remain for the platform, the platform entry
 	// still exists (empty map), so it will block all users
-	users := ps.ListAllowedUsers(PlatformDMWork)
+	users := ps.ListAllowedUsers(PlatformOcto)
 	if len(users) != 0 {
 		t.Errorf("Expected 0 users after removal, got %d", len(users))
 	}
@@ -311,19 +311,19 @@ func TestPairingStore_PairUser(t *testing.T) {
 		t.Fatal("Expected non-empty pairing code")
 	}
 
-	err := ps.PairUser(PlatformDMWork, "new_user", code)
+	err := ps.PairUser(PlatformOcto, "new_user", code)
 	if err != nil {
 		t.Fatalf("PairUser failed: %v", err)
 	}
 
-	if !ps.IsUserAllowed(PlatformDMWork, "new_user") {
+	if !ps.IsUserAllowed(PlatformOcto, "new_user") {
 		t.Error("Expected paired user to be allowed")
 	}
 }
 
 func TestPairingStore_PairUser_InvalidCode(t *testing.T) {
 	ps := NewPairingStore()
-	err := ps.PairUser(PlatformDMWork, "user1", "invalid_code")
+	err := ps.PairUser(PlatformOcto, "user1", "invalid_code")
 	if err == nil {
 		t.Error("Expected error for invalid pairing code")
 	}
@@ -332,9 +332,9 @@ func TestPairingStore_PairUser_InvalidCode(t *testing.T) {
 func TestPairingStore_PairUser_PlatformMismatch(t *testing.T) {
 	t.Skip("requires multiple platforms")
 	ps := NewPairingStore()
-	code := ps.GeneratePairCodeForPlatform(PlatformDMWork)
+	code := ps.GeneratePairCodeForPlatform(PlatformOcto)
 
-	err := ps.PairUser(PlatformDMWork, "user1", code)
+	err := ps.PairUser(PlatformOcto, "user1", code)
 	if err == nil {
 		t.Error("Expected error for platform mismatch")
 	}
@@ -343,15 +343,15 @@ func TestPairingStore_PairUser_PlatformMismatch(t *testing.T) {
 func TestPairingStore_ListAllowedUsers(t *testing.T) {
 	t.Skip("requires multiple platforms")
 	ps := NewPairingStore()
-	ps.AddAllowedUser(PlatformDMWork, "user1")
-	ps.AddAllowedUser(PlatformDMWork, "user2")
+	ps.AddAllowedUser(PlatformOcto, "user1")
+	ps.AddAllowedUser(PlatformOcto, "user2")
 
-	users := ps.ListAllowedUsers(PlatformDMWork)
+	users := ps.ListAllowedUsers(PlatformOcto)
 	if len(users) != 2 {
 		t.Errorf("Expected 2 users, got %d", len(users))
 	}
 
-	users = ps.ListAllowedUsers(PlatformDMWork)
+	users = ps.ListAllowedUsers(PlatformOcto)
 	if users != nil {
 		t.Errorf("Expected nil for platform with no users, got %v", users)
 	}
@@ -443,8 +443,8 @@ func TestGuessExtension(t *testing.T) {
 func TestChannelDirectory_SetAndGetBinding(t *testing.T) {
 	cd := NewChannelDirectory()
 
-	cd.SetBinding("dmwork", "C12345", "customer_support")
-	binding := cd.GetBinding("dmwork", "C12345")
+	cd.SetBinding("octo", "C12345", "customer_support")
+	binding := cd.GetBinding("octo", "C12345")
 
 	if binding == nil {
 		t.Fatal("Expected binding")
@@ -456,7 +456,7 @@ func TestChannelDirectory_SetAndGetBinding(t *testing.T) {
 
 func TestChannelDirectory_GetBinding_NotFound(t *testing.T) {
 	cd := NewChannelDirectory()
-	binding := cd.GetBinding("dmwork", "unknown")
+	binding := cd.GetBinding("octo", "unknown")
 	if binding != nil {
 		t.Error("Expected nil for unknown binding")
 	}
@@ -465,10 +465,10 @@ func TestChannelDirectory_GetBinding_NotFound(t *testing.T) {
 func TestChannelDirectory_UpdateBinding(t *testing.T) {
 	cd := NewChannelDirectory()
 
-	cd.SetBinding("dmwork", "C12345", "old_skill")
-	cd.SetBinding("dmwork", "C12345", "new_skill")
+	cd.SetBinding("octo", "C12345", "old_skill")
+	cd.SetBinding("octo", "C12345", "new_skill")
 
-	binding := cd.GetBinding("dmwork", "C12345")
+	binding := cd.GetBinding("octo", "C12345")
 	if binding.SkillName != "new_skill" {
 		t.Errorf("Expected 'new_skill', got '%s'", binding.SkillName)
 	}
@@ -477,18 +477,18 @@ func TestChannelDirectory_UpdateBinding(t *testing.T) {
 func TestChannelDirectory_RemoveBinding(t *testing.T) {
 	cd := NewChannelDirectory()
 
-	cd.SetBinding("dmwork", "C12345", "skill")
-	removed := cd.RemoveBinding("dmwork", "C12345")
+	cd.SetBinding("octo", "C12345", "skill")
+	removed := cd.RemoveBinding("octo", "C12345")
 	if !removed {
 		t.Error("Expected remove to return true")
 	}
 
-	binding := cd.GetBinding("dmwork", "C12345")
+	binding := cd.GetBinding("octo", "C12345")
 	if binding != nil {
 		t.Error("Expected nil after removal")
 	}
 
-	removed = cd.RemoveBinding("dmwork", "nonexistent")
+	removed = cd.RemoveBinding("octo", "nonexistent")
 	if removed {
 		t.Error("Expected false for nonexistent binding")
 	}
@@ -497,16 +497,16 @@ func TestChannelDirectory_RemoveBinding(t *testing.T) {
 func TestChannelDirectory_PlatformFilter(t *testing.T) {
 	t.Skip("requires multiple platforms")
 	cd := NewChannelDirectory()
-	cd.SetBinding("dmwork", "C12345", "slack_skill")
+	cd.SetBinding("octo", "C12345", "slack_skill")
 
 	// Matching platform
-	binding := cd.GetBinding("dmwork", "C12345")
+	binding := cd.GetBinding("octo", "C12345")
 	if binding == nil {
 		t.Error("Expected binding for matching platform")
 	}
 
 	// Wrong platform
-	binding = cd.GetBinding("dmwork", "C12345")
+	binding = cd.GetBinding("octo", "C12345")
 	if binding != nil {
 		t.Error("Expected nil for wrong platform")
 	}
@@ -514,8 +514,8 @@ func TestChannelDirectory_PlatformFilter(t *testing.T) {
 
 func TestChannelDirectory_ListBindings(t *testing.T) {
 	cd := NewChannelDirectory()
-	cd.SetBinding("dmwork", "C1", "skill1")
-	cd.SetBinding("dmwork", "D1", "skill2")
+	cd.SetBinding("octo", "C1", "skill1")
+	cd.SetBinding("octo", "D1", "skill2")
 
 	bindings := cd.ListBindings()
 	if len(bindings) != 2 {
@@ -530,12 +530,12 @@ func TestChannelDirectory_LoadFromConfig(t *testing.T) {
 			map[string]any{
 				"channel_id": "C100",
 				"skill_name": "test_skill",
-				"platform":   "dmwork",
+				"platform":   "octo",
 			},
 			map[string]any{
 				"channel_id": "D200",
 				"skill_name": "discord_skill",
-				"platform":   "dmwork",
+				"platform":   "octo",
 			},
 		},
 	}
@@ -547,7 +547,7 @@ func TestChannelDirectory_LoadFromConfig(t *testing.T) {
 		t.Errorf("Expected 2 bindings from config, got %d", len(bindings))
 	}
 
-	b := cd.GetBinding("dmwork", "C100")
+	b := cd.GetBinding("octo", "C100")
 	if b == nil || b.SkillName != "test_skill" {
 		t.Error("Expected test_skill binding for C100")
 	}
@@ -614,15 +614,15 @@ func TestMessageMirror_LoadRules(t *testing.T) {
 	cfg := map[string]any{
 		"mirrors": []any{
 			map[string]any{
-				"source_platform": "dmwork",
+				"source_platform": "octo",
 				"source_chat":     "-100123",
-				"dest_platform":   "dmwork",
+				"dest_platform":   "octo",
 				"dest_chat":       "987654",
 			},
 			map[string]any{
-				"source_platform": "dmwork",
+				"source_platform": "octo",
 				"source_chat":     "C100",
-				"dest_platform":   "dmwork",
+				"dest_platform":   "octo",
 				"dest_chat":       "-100456",
 				"direction":       "bidirectional",
 			},
@@ -648,22 +648,22 @@ func TestMessageMirror_ShouldMirror_Forward(t *testing.T) {
 	mm.LoadRules(map[string]any{
 		"mirrors": []any{
 			map[string]any{
-				"source_platform": "dmwork",
+				"source_platform": "octo",
 				"source_chat":     "-100123",
-				"dest_platform":   "dmwork",
+				"dest_platform":   "octo",
 				"dest_chat":       "987654",
 			},
 		},
 	})
 
 	matches := mm.ShouldMirror(SessionSource{
-		Platform: PlatformDMWork,
+		Platform: PlatformOcto,
 		ChatID:   "-100123",
 	})
 	if len(matches) != 1 {
 		t.Fatalf("Expected 1 match, got %d", len(matches))
 	}
-	if matches[0].DestPlatform != "dmwork" {
+	if matches[0].DestPlatform != "octo" {
 		t.Error("Expected dest platform discord")
 	}
 }
@@ -673,16 +673,16 @@ func TestMessageMirror_ShouldMirror_NoMatch(t *testing.T) {
 	mm.LoadRules(map[string]any{
 		"mirrors": []any{
 			map[string]any{
-				"source_platform": "dmwork",
+				"source_platform": "octo",
 				"source_chat":     "-100123",
-				"dest_platform":   "dmwork",
+				"dest_platform":   "octo",
 				"dest_chat":       "987654",
 			},
 		},
 	})
 
 	matches := mm.ShouldMirror(SessionSource{
-		Platform: PlatformDMWork,
+		Platform: PlatformOcto,
 		ChatID:   "C100",
 	})
 	if len(matches) != 0 {
@@ -695,9 +695,9 @@ func TestMessageMirror_ShouldMirror_Bidirectional(t *testing.T) {
 	mm.LoadRules(map[string]any{
 		"mirrors": []any{
 			map[string]any{
-				"source_platform": "dmwork",
+				"source_platform": "octo",
 				"source_chat":     "-100123",
-				"dest_platform":   "dmwork",
+				"dest_platform":   "octo",
 				"dest_chat":       "987654",
 				"direction":       "bidirectional",
 			},
@@ -706,7 +706,7 @@ func TestMessageMirror_ShouldMirror_Bidirectional(t *testing.T) {
 
 	// Forward match
 	matches := mm.ShouldMirror(SessionSource{
-		Platform: PlatformDMWork,
+		Platform: PlatformOcto,
 		ChatID:   "-100123",
 	})
 	if len(matches) != 1 {
@@ -715,13 +715,13 @@ func TestMessageMirror_ShouldMirror_Bidirectional(t *testing.T) {
 
 	// Reverse match
 	matches = mm.ShouldMirror(SessionSource{
-		Platform: PlatformDMWork,
+		Platform: PlatformOcto,
 		ChatID:   "987654",
 	})
 	if len(matches) != 1 {
 		t.Fatalf("Expected 1 reverse match, got %d", len(matches))
 	}
-	if matches[0].DestPlatform != "dmwork" {
+	if matches[0].DestPlatform != "octo" {
 		t.Errorf("Expected reverse dest platform 'telegram', got '%s'", matches[0].DestPlatform)
 	}
 }
@@ -769,14 +769,14 @@ func TestSessionSource_Description(t *testing.T) {
 
 func TestSessionSource_ToMap(t *testing.T) {
 	src := &SessionSource{
-		Platform: PlatformDMWork,
+		Platform: PlatformOcto,
 		ChatID:   "123",
 		UserID:   "user1",
 		ChatType: "group",
 	}
 
 	m := src.ToMap()
-	if m["platform"] != "dmwork" {
+	if m["platform"] != "octo" {
 		t.Error("Expected platform in map")
 	}
 	if m["chat_id"] != "123" {
@@ -802,9 +802,9 @@ func TestRuntimeStatus_IncrementMessages(t *testing.T) {
 	defer os.Unsetenv("HERMES_HOME")
 
 	rs := NewRuntimeStatus()
-	rs.IncrementMessageCount("dmwork")
-	rs.IncrementMessageCount("dmwork")
-	rs.IncrementMessageCount("dmwork")
+	rs.IncrementMessageCount("octo")
+	rs.IncrementMessageCount("octo")
+	rs.IncrementMessageCount("octo")
 
 	if rs.TotalMessages != 3 {
 		t.Errorf("Expected 3 total messages, got %d", rs.TotalMessages)
@@ -822,9 +822,9 @@ func TestRuntimeStatus_WriteStatus(t *testing.T) {
 	defer os.Unsetenv("HERMES_HOME")
 
 	rs := NewRuntimeStatus()
-	rs.WriteRuntimeStatus("dmwork", "connected", "", "")
+	rs.WriteRuntimeStatus("octo", "connected", "", "")
 
-	ps := rs.Platforms["dmwork"]
+	ps := rs.Platforms["octo"]
 	if ps.State != "connected" {
 		t.Errorf("Expected 'connected', got '%s'", ps.State)
 	}
@@ -1013,10 +1013,10 @@ func TestHashSenderID(t *testing.T) {
 
 func TestDeliveryRouter_DeliverResponse_WithAdapter(t *testing.T) {
 	dr := NewDeliveryRouter()
-	adapter := &mockAdapter{platform: PlatformDMWork}
+	adapter := &mockAdapter{platform: PlatformOcto}
 	dr.RegisterAdapter(adapter)
 
-	err := dr.DeliverResponse(context.Background(), "chat1", "Hello world", SessionSource{Platform: PlatformDMWork})
+	err := dr.DeliverResponse(context.Background(), "chat1", "Hello world", SessionSource{Platform: PlatformOcto})
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -1024,11 +1024,11 @@ func TestDeliveryRouter_DeliverResponse_WithAdapter(t *testing.T) {
 
 func TestDeliveryRouter_DeliverResponse_WithMedia(t *testing.T) {
 	dr := NewDeliveryRouter()
-	adapter := &mockAdapter{platform: PlatformDMWork}
+	adapter := &mockAdapter{platform: PlatformOcto}
 	dr.RegisterAdapter(adapter)
 
 	content := "Hello\nMEDIA:/path/to/image.png\nWorld"
-	err := dr.DeliverResponse(context.Background(), "chat1", content, SessionSource{Platform: PlatformDMWork})
+	err := dr.DeliverResponse(context.Background(), "chat1", content, SessionSource{Platform: PlatformOcto})
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
@@ -1038,7 +1038,7 @@ func TestDeliveryRouter_DeliverResponse_WithMedia(t *testing.T) {
 
 func TestSessionSource_ToMap_WithOptionalFields(t *testing.T) {
 	src := &SessionSource{
-		Platform:  PlatformDMWork,
+		Platform:  PlatformOcto,
 		ChatID:    "123",
 		UserID:    "user1",
 		ChatType:  "group",
@@ -1067,11 +1067,11 @@ func TestPlatformMaxMessageLength(t *testing.T) {
 		platform Platform
 		expected int
 	}{
-		{PlatformDMWork, 4096},
-		{PlatformDMWork, 2000},
-		{PlatformDMWork, 40000},
-		{PlatformDMWork, 1600},
-		{PlatformDMWork, 2048},
+		{PlatformOcto, 4096},
+		{PlatformOcto, 2000},
+		{PlatformOcto, 40000},
+		{PlatformOcto, 1600},
+		{PlatformOcto, 2048},
 	}
 
 	for _, tt := range tests {
@@ -1086,13 +1086,13 @@ func TestPlatformMaxMessageLength(t *testing.T) {
 
 func TestPairingStore_CaseInsensitiveMatch(t *testing.T) {
 	ps := NewPairingStore()
-	ps.AddAllowedUser(PlatformDMWork, "UserName123")
+	ps.AddAllowedUser(PlatformOcto, "UserName123")
 
 	// Should match case-insensitively
-	if !ps.IsUserAllowed(PlatformDMWork, "username123") {
+	if !ps.IsUserAllowed(PlatformOcto, "username123") {
 		t.Error("Expected case-insensitive match")
 	}
-	if !ps.IsUserAllowed(PlatformDMWork, "USERNAME123") {
+	if !ps.IsUserAllowed(PlatformOcto, "USERNAME123") {
 		t.Error("Expected case-insensitive match for uppercase")
 	}
 }
@@ -1102,10 +1102,10 @@ func TestPairingStore_CaseInsensitiveMatch(t *testing.T) {
 func TestPairingStore_LoadAllowedUsers_StringFormat(t *testing.T) {
 	ps := NewPairingStore()
 	ps.LoadAllowedUsers(map[string]any{
-		"dmwork": "single_user",
+		"octo": "single_user",
 	})
 
-	if !ps.IsUserAllowed(PlatformDMWork, "single_user") {
+	if !ps.IsUserAllowed(PlatformOcto, "single_user") {
 		t.Error("Expected single string user to be allowed")
 	}
 }
@@ -1114,7 +1114,7 @@ func TestPairingStore_LoadAllowedUsers_NilConfig(t *testing.T) {
 	ps := NewPairingStore()
 	ps.LoadAllowedUsers(nil)
 	// Should not panic; nil config = no allowed users = deny by default
-	if ps.IsUserAllowed(PlatformDMWork, "anyone") {
+	if ps.IsUserAllowed(PlatformOcto, "anyone") {
 		t.Error("Expected deny-by-default with nil config")
 	}
 }
@@ -1127,10 +1127,10 @@ func TestRuntimeStatus_WriteStatus_Disconnect(t *testing.T) {
 	defer os.Unsetenv("HERMES_HOME")
 
 	rs := NewRuntimeStatus()
-	rs.WriteRuntimeStatus("dmwork", "connected", "", "")
-	rs.WriteRuntimeStatus("dmwork", "disconnected", "TIMEOUT", "Connection timed out")
+	rs.WriteRuntimeStatus("octo", "connected", "", "")
+	rs.WriteRuntimeStatus("octo", "disconnected", "TIMEOUT", "Connection timed out")
 
-	ps := rs.Platforms["dmwork"]
+	ps := rs.Platforms["octo"]
 	if ps.State != "disconnected" {
 		t.Errorf("Expected 'disconnected', got '%s'", ps.State)
 	}

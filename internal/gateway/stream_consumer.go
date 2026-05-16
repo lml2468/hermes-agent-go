@@ -136,7 +136,7 @@ func (sc *StreamConsumer) flushLocked() error {
 // to avoid rate limiting.
 func defaultMinDelay(platform Platform) time.Duration {
 	switch platform {
-	case PlatformDMWork:
+	case PlatformOcto:
 		return 500 * time.Millisecond
 	default:
 		return 500 * time.Millisecond

@@ -18,7 +18,7 @@ func TestSessionStore(t *testing.T) {
 	}
 
 	src := &SessionSource{
-		Platform: PlatformDMWork,
+		Platform: PlatformOcto,
 		ChatID:   "chat_123",
 		UserID:   "user_456",
 	}
@@ -55,7 +55,7 @@ func TestSessionStore(t *testing.T) {
 
 func TestBuildSessionKeyVariations(t *testing.T) {
 	dm := &SessionSource{
-		Platform: PlatformDMWork,
+		Platform: PlatformOcto,
 		ChatID:   "123",
 		UserID:   "user1",
 		ChatType: "dm",
@@ -66,7 +66,7 @@ func TestBuildSessionKeyVariations(t *testing.T) {
 	}
 
 	group := &SessionSource{
-		Platform: PlatformDMWork,
+		Platform: PlatformOcto,
 		ChatID:   "guild_789",
 		UserID:   "user1",
 		ChatType: "group",
@@ -77,7 +77,7 @@ func TestBuildSessionKeyVariations(t *testing.T) {
 	}
 
 	thread := &SessionSource{
-		Platform: PlatformDMWork,
+		Platform: PlatformOcto,
 		ChatID:   "channel_1",
 		UserID:   "user1",
 		ThreadID: "thread_ts",
