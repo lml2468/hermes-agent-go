@@ -1,0 +1,10 @@
+name: octo
+description: "Octo IM platform adapter based on WuKongIM protocol"
+version: "0.1.0"
+author: "hermes-team"
+type: platform
+platform:
+  identifier: "octo"
+  env_token: "OCTO_BOT_TOKEN"
+  env_api_url: "OCTO_API_URL"
+  default_api_url: "https://im.deepminer.com.cn/api"

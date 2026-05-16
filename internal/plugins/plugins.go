@@ -30,11 +30,21 @@ type Plugin struct {
 
 // PluginManifest is the structure of a plugin.yaml file.
 type PluginManifest struct {
-	Name        string       `yaml:"name"`
-	Description string       `yaml:"description"`
-	Version     string       `yaml:"version"`
-	Author      string       `yaml:"author"`
-	Tools       []PluginTool `yaml:"tools"`
+	Name        string            `yaml:"name"`
+	Description string            `yaml:"description"`
+	Version     string            `yaml:"version"`
+	Author      string            `yaml:"author"`
+	Type        string            `yaml:"type"`
+	Tools       []PluginTool      `yaml:"tools,omitempty"`
+	Platform    *PlatformManifest `yaml:"platform,omitempty"`
+}
+
+// PlatformManifest describes platform-specific plugin metadata.
+type PlatformManifest struct {
+	Identifier    string `yaml:"identifier"`
+	EnvToken      string `yaml:"env_token"`
+	EnvAPIURL     string `yaml:"env_api_url"`
+	DefaultAPIURL string `yaml:"default_api_url"`
 }
 
 // PluginTool describes a tool defined by a plugin.

@@ -747,3 +747,32 @@ func SetupFromEnv(runner *Runner) {
 		slog.Info("Slack bot token found, adapter will be registered")
 	}
 }
+
+// LoadPlatformPlugins discovers registered platform plugins and creates adapters
+// for those that have configuration (env vars or gateway config).
+func LoadPlatformPlugins(runner *Runner, gwCfg *GatewayConfig) {
+	registry := GlobalPlatformRegistry()
+	for _, meta := range registry.All() {
+		cfg, ok := gwCfg.Platforms[meta.ID]
+		if !ok {
+			cfg = &PlatformConfig{Enabled: true}
+		}
+		if !cfg.Enabled {
+			continue
+		}
+
+		plugin, found := registry.Get(meta.ID)
+		if !found {
+			continue
+		}
+
+		adapter, err := plugin.CreateAdapter(cfg)
+		if err != nil {
+			slog.Debug("Platform plugin not configured", "platform", meta.ID, "error", err)
+			continue
+		}
+
+		runner.RegisterAdapter(adapter)
+		slog.Info("Platform plugin loaded", "platform", meta.ID, "version", meta.Version)
+	}
+}

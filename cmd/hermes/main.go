@@ -22,6 +22,8 @@ import (
 	"github.com/hermes-agent/hermes-agent-go/internal/gateway/platforms"
 	"github.com/hermes-agent/hermes-agent-go/internal/skills"
 	"github.com/spf13/cobra"
+
+	_ "github.com/hermes-agent/hermes-agent-go/plugins/platforms/octo"
 )
 
 // Build-time variables set via ldflags.
@@ -394,6 +396,9 @@ func runGateway() error {
 		adapter := platforms.NewDMWorkAdapter(apiURL, botToken)
 		runner.RegisterAdapter(adapter)
 	}
+
+	// Load platform plugins (e.g. Octo).
+	gateway.LoadPlatformPlugins(runner, gwCfg)
 
 	if len(runner.ConnectedPlatforms()) == 0 {
 		fmt.Println("No messaging platforms configured.")
